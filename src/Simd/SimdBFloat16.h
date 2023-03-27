@@ -1,7 +1,7 @@
 /*
 * Simd Library (http://ermig1979.github.io/Simd).
 *
-* Copyright (c) 2011-2022 Yermalayeu Ihar.
+* Copyright (c) 2011-2023 Yermalayeu Ihar.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -142,6 +142,27 @@ namespace Simd
             __m512 s0 = Avx512bw::Load<align, mask>(src + 0 * F, srcMask[0]);
             __m512 s1 = Avx512bw::Load<align, mask>(src + 1 * F, srcMask[1]);
             Avx512bw::Store<align, mask>(dst, (__m512i)_mm512_cvtne2ps_pbh(s0, s1), dstMask[0]);
+        }
+    }
+#endif 
+
+#ifdef SIMD_NEON_ENABLE    
+    namespace Neon
+    {
+        namespace Bf16
+        {
+            const uint32x4_t ROUND = SIMD_VEC_SET1_EPI32(Base::Bf16::ROUND);
+            const uint32x4_t MASK = SIMD_VEC_SET1_EPI32(Base::Bf16::MASK);
+        }
+
+        SIMD_INLINE uint32x4_t Float32ToBFloat16(float32x4_t value)
+        {
+            return vshrq_n_u32(vaddq_u32(vreinterpretq_u32_f32(value), Bf16::ROUND), Base::Bf16::SHIFT);
+        }
+
+        SIMD_INLINE float32x4_t BFloat16ToFloat32(uint32x4_t value)
+        {
+            return vreinterpretq_f32_u32(vshlq_n_u32(value, Base::Bf16::SHIFT));
         }
     }
 #endif 

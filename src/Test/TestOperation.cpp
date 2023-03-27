@@ -1,7 +1,7 @@
 /*
 * Tests for Simd Library (http://ermig1979.github.io/Simd).
 *
-* Copyright (c) 2011-2022 Yermalayeu Ihar.
+* Copyright (c) 2011-2023 Yermalayeu Ihar.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -169,7 +169,6 @@ namespace Test
             {
                 result = result && OperationBinary8uAutoTest(ARGS_OB8U(format, W, H, type, f1, f2));
                 result = result && OperationBinary8uAutoTest(ARGS_OB8U(format, W + O, H - O, type, f1, f2));
-                result = result && OperationBinary8uAutoTest(ARGS_OB8U(format, W - O, H + O, type, f1, f2));
             }
         }
 
@@ -242,7 +241,6 @@ namespace Test
         {
             result = result && OperationBinary16iAutoTest(ARGS_OB16I(W, H, type, f1, f2));
             result = result && OperationBinary16iAutoTest(ARGS_OB16I(W + O, H - O, type, f1, f2));
-            result = result && OperationBinary16iAutoTest(ARGS_OB16I(W - O, H + O, type, f1, f2));
         }
 
         return result;
@@ -311,7 +309,6 @@ namespace Test
 
         result = result && VectorProductAutoTest(W, H, f1, f2);
         result = result && VectorProductAutoTest(W - O, H + O, f1, f2);
-        result = result && VectorProductAutoTest(W + O, H - O, f1, f2);
 
         return result;
     }

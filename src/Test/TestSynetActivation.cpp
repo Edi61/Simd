@@ -1,7 +1,7 @@
 /*
 * Tests for Simd Library (http://ermig1979.github.io/Simd).
 *
-* Copyright (c) 2011-2022 Yermalayeu Ihar.
+* Copyright (c) 2011-2023 Yermalayeu Ihar.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -428,17 +428,14 @@ namespace Test
         return result;
     }
 
-    bool SynetPreluLayerForwardAutoTest(int mask, const FuncPLF& f1, const FuncPLF& f2)
+    bool SynetPreluLayerForwardAutoTest(const FuncPLF& f1, const FuncPLF& f2)
     {
         bool result = true;
 
-        for (SimdTensorFormatType format = SimdTensorFormatNchw; format <= SimdTensorFormatNchw16c && result; format = (SimdTensorFormatType)((int)format + 1))
+        for (SimdTensorFormatType format = SimdTensorFormatNchw; format <= SimdTensorFormatNhwc && result; format = (SimdTensorFormatType)((int)format + 1))
         {
-            if (SimdSynetTensorAlignment(format) & mask)
-            {
-                result = result && SynetPreluLayerForwardAutoTest(H, W, format, f1, f2);
-                result = result && SynetPreluLayerForwardAutoTest(H - O, W + O, format, f1, f2);
-            }
+            result = result && SynetPreluLayerForwardAutoTest(H, W, format, f1, f2);
+            result = result && SynetPreluLayerForwardAutoTest(H - O, W + O, format, f1, f2);
         }
 
         return result;
@@ -448,26 +445,26 @@ namespace Test
     {
         bool result = true;
 
-        result = result && SynetPreluLayerForwardAutoTest(TFM_ANY, FUNC_PLF(Simd::Base::SynetPreluLayerForward), FUNC_PLF(SimdSynetPreluLayerForward));
+        result = result && SynetPreluLayerForwardAutoTest(FUNC_PLF(Simd::Base::SynetPreluLayerForward), FUNC_PLF(SimdSynetPreluLayerForward));
 
 #ifdef SIMD_SSE41_ENABLE
         if (Simd::Sse41::Enable)
-            result = result && SynetPreluLayerForwardAutoTest(TFM_128, FUNC_PLF(Simd::Sse41::SynetPreluLayerForward), FUNC_PLF(SimdSynetPreluLayerForward));
+            result = result && SynetPreluLayerForwardAutoTest(FUNC_PLF(Simd::Sse41::SynetPreluLayerForward), FUNC_PLF(SimdSynetPreluLayerForward));
 #endif 
 
 #ifdef SIMD_AVX_ENABLE
         if (Simd::Avx::Enable)
-            result = result && SynetPreluLayerForwardAutoTest(TFM_256, FUNC_PLF(Simd::Avx::SynetPreluLayerForward), FUNC_PLF(SimdSynetPreluLayerForward));
+            result = result && SynetPreluLayerForwardAutoTest(FUNC_PLF(Simd::Avx::SynetPreluLayerForward), FUNC_PLF(SimdSynetPreluLayerForward));
 #endif 
 
 #ifdef SIMD_AVX512BW_ENABLE
         if (Simd::Avx512bw::Enable)
-            result = result && SynetPreluLayerForwardAutoTest(TFM_512, FUNC_PLF(Simd::Avx512bw::SynetPreluLayerForward), FUNC_PLF(SimdSynetPreluLayerForward));
+            result = result && SynetPreluLayerForwardAutoTest(FUNC_PLF(Simd::Avx512bw::SynetPreluLayerForward), FUNC_PLF(SimdSynetPreluLayerForward));
 #endif
 
 #ifdef SIMD_NEON_ENABLE
         if (Simd::Neon::Enable)
-            result = result && SynetPreluLayerForwardAutoTest(TFM_128, FUNC_PLF(Simd::Neon::SynetPreluLayerForward), FUNC_PLF(SimdSynetPreluLayerForward));
+            result = result && SynetPreluLayerForwardAutoTest(FUNC_PLF(Simd::Neon::SynetPreluLayerForward), FUNC_PLF(SimdSynetPreluLayerForward));
 #endif
 
         return result;

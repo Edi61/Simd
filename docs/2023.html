@@ -33,7 +33,53 @@
 </center>
 
 <hr/>
-<h3 id="R123">Match X, 2023 (version X.X.123)</h3> 
+<h3 id="R124">April X, 2023 (version X.X.124)</h3>
+<h4>Algorithms</h4>
+<h5>New features</h5>
+<ul>
+ <li>Base implementation, SSE4.1, AVX2, AVX-512BW, NEON optimizations of function BgraToYuv422pV2.</li>
+ <li>NEON optimizations of function BgraToYuv444pV2.</li>
+ <li>NEON optimizations of function BgraToYuv420pV2.</li>
+ <li>NEON optimizations of function Float32ToBFloat16.</li>
+ <li>NEON optimizations of function BFloat16ToFloat32.</li>
+ <li>Base implementation, SSE4.1, AVX2, AVX-512BW, NEON optimizations of function BgraToYuva420pV2.</li>
+</ul>
+<h5>Bug fixing</h5>
+<ul>
+ <li>Error in method View::ToOcv.</li>
+</ul>
+<h5>Removing</h5>
+<ul>
+ <li>Support of all formats besides NHWC and NCHW for function SynetAddBias.</li>
+ <li>Support of all formats besides NHWC and NCHW for function SynetLrnLayerCrossChannels.</li>
+ <li>Support of all formats besides NHWC and NCHW for function SynetPreluLayerForward.</li>
+ <li>Support of all formats besides NHWC and NCHW for function SynetScaleLayerForward.</li>
+ <li>Support of all formats besides NHWC and NCHW for function SynetFusedLayerForward0.</li>
+ <li>Support of all formats besides NHWC and NCHW for function SynetFusedLayerForward1.</li>
+ <li>Support of all formats besides NHWC and NCHW for function SynetFusedLayerForward2.</li>
+ <li>Support of all formats besides NHWC and NCHW for function SynetFusedLayerForward3.</li>
+ <li>Support of all formats besides NHWC and NCHW for function SynetFusedLayerForward4.</li>
+ <li>Support of all formats besides NHWC and NCHW for function SynetFusedLayerForward8.</li>
+ <li>Support of all formats besides NHWC and NCHW for function SynetFusedLayerForward9.</li>
+ <li>Function SynetReorderFilter.</li>
+ <li>Function SynetReorderImage.</li>
+ <li>Function SynetTensorAlignment.</li>
+ <li>Function SynetSpecifyTensorFormat.</li>
+ <li>Support of all formats besides NHWC and NCHW for enumeration SimdTensorFormatType.</li>
+</ul>
+ 
+<h4>Test framework</h4>
+<h5>New features</h5>
+<ul>
+ <li>Test command line argument '-ts' to print statistics of time of tests execution.</li>
+ <li>Tests for verifying functionality of function BgraToYuv422pV2.</li>
+ <li>Tests for verifying functionality of function BgraToYuva420pV2.</li>
+ <li>Improving header of performance report.</li>
+</ul>
+
+<a href="#HOME">Home</a>
+<hr/>
+<h3 id="R123">Match 9, 2023 (version 5.2.123)</h3> 
 <h4>Algorithms</h4>
 <h5>Bug fixing</h5>
 <ul>
@@ -63,16 +109,30 @@
  <li>Wrong assert in AVX-512BW optimization of function BgraToYuv420pV2.</li>
  <li>MSVS-2017 compiler errors in AVX-512BW optimizations of function AlphaBlendingBgraToYuv420p.</li>
  <li>MSVS-2017 compiler errors in AVX-512BW optimizations of WarpAffine engine.</li>
- <li>MSVS-2015 compiler errors in file SimdFmadd.h (x86).</li>
- <li>MSVS-2015 compiler errors in SSE4.1 and AVX2 optimizations of WarpAffine engine (x86).</li>
+ <li>MSVS-2015 compiler errors in file SimdFmadd.h (Win32).</li>
+ <li>MSVS-2015 compiler errors in SSE4.1 and AVX2 optimizations of WarpAffine engine (Win32).</li>
  <li>Crash in AVX2 optimizations of function CosineDistance16f.</li>
  <li>Crash in SSE4.1, AVX2, AVX-512BW, NEON optimizations of function HogLiteResizeFeatures.</li>
  <li>Clang compiler warnings in file SimdBaseRecursiveBilateralFilter.cpp.</li>
  <li>Clang compiler warnings in file SimdSse41RecursiveBilateralFilter.cpp.</li>
  <li>Clang linker error in method Motion::Detector::GenerateSearchRegionScanlines.</li>
+ <li>Crashes in AVX-512BW optimizations of WarpAffine engine (MSVS-2022, Release).</li>
+ <li>Internal compiler error in file SimdAvx512bwSynetConvolution32f.cpp (MSVS-2017, Release).</li>
+ <li>Error in SSE4.1, AVX2 optimizations of function BgraToYuv444pV2 (MSVS-2015, Release, Win32).</li>
+ <li>Error in SSE4.1, AVX2 optimizations of function BgraToYuv420pV2 (MSVS-2015, Release, Win32).</li>
+ <li>Error in AVX2 optimizations of function Yuva444pToBgraV2 (MSVS-2015, Release, Win32).</li>
+ <li>Error in AVX2 optimizations of function Yuv444pToBgraV2 (MSVS-2015, Release, Win32).</li>
+ <li>Error in AVX2 optimizations of function Yuv420pToBgraV2 (MSVS-2015, Release, Win32).</li>
+ <li>Error in AVX2 optimizations of function AlphaBlendingBgraToYuv420p (MSVS-2015, Release, Win32).</li>
+ <li>Error in AVX2 optimizations of class ResizerByteArea2x2 (MSVS-2015, Release, Win32).</li>
+ <li>Error in AVX2 optimizations of function Uyvy422ToBgr (MSVS-2015, Release, Win32).</li>
 </ul>
 
 <h4>Test framework</h4>
+<h5>New features</h5>
+<ul>
+ <li>Handling of Windows exceptions in AutoTest.</li>
+</ul>
 <h5>Bug fixing</h5>
 <ul>
  <li>Error in test Nv12SaveAsJpegToMemoryAutoTest.</li>
@@ -83,17 +143,27 @@
  <li>Error in test ResizeBilinearAutoTest.</li>
  <li>Error in test SynetMergedConvolution8iForwardAutoTest.</li>
  <li>Error in function MakeAutoTests (multithreaded environment).</li>
+ <li>Error in test Float32ToBFloat16AutoTest.</li>
+ <li>Error in test SynetConvert32fTo8uAutoTest (MSVS-2015 and MSVS-2017, Release, Win32).</li>
+ <li>Error in test SynetMergedConvolution32fForwardAutoTest (MSVS-2015 and MSVS-2017, Release, Win32).</li>
+ <li>Error in test CosineDistancesMxNp16fAutoTest.</li>
+ <li>Error in test VectorNormNp16fAutoTest.</li>
 </ul>
 
 <h4>Infrastructure</h4>
 <h5>New features</h5>
 <ul>
  <li>Script BuildAll.cmd to build MSVS solution for all configurations and platforms.</li>
- <li>Github actions script for Cmake (build and test for x86_x64, Linux).</li>
- <li>Github actions script for Cmake (cross platform build for ARM, Linux).</li>
+ <li>Github actions script for CMake (build and test for x86_x64, Linux).</li>
+ <li>Github actions script for CMake (cross platform build for ARM, Linux).</li>
  <li>Github actions script for Cmake (cross platform build for ARM64, Linux).</li>
- <li>Github actions script for Cmake (cross platform build for PowerPC, Linux).</li>
- <li>Github actions script for Cmake (build and test for clang, Linux).</li>
+ <li>Github actions script for CMake (cross platform build for PowerPC, Linux).</li>
+ <li>Github actions script for CMake (build and test for clang, Linux).</li>
+ <li>Github actions script for MSBuild (build and test for Visual Studio 2022, Windows).</li>
+ <li>Script GetThreadCount.cmd.</li>
+ <li>Github actions script for MSBuild (build and test for Visual Studio 2019, Windows).</li>
+ <li>Github actions script for MSBuild (build and test for Visual Studio 2017, Windows).</li>
+ <li>Github actions script for MSBuild (build and test for Visual Studio 2015, Windows).</li>
 </ul>
 <h5>Renaming</h5>
 <ul>

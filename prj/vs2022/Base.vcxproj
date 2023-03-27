@@ -63,6 +63,7 @@
     <ClInclude Include="..\..\src\Simd\SimdPow.h" />
     <ClInclude Include="..\..\src\Simd\SimdRectangle.hpp" />
     <ClInclude Include="..\..\src\Simd\SimdRecursiveBilateralFilter.h" />
+    <ClInclude Include="..\..\src\Simd\SimdReorder.h" />
     <ClInclude Include="..\..\src\Simd\SimdResizer.h" />
     <ClInclude Include="..\..\src\Simd\SimdResizerCommon.h" />
     <ClInclude Include="..\..\src\Simd\SimdRuntime.h" />
@@ -170,6 +171,7 @@
     <ClCompile Include="..\..\src\Simd\SimdBaseSvm.cpp" />
     <ClCompile Include="..\..\src\Simd\SimdBaseSynet.cpp" />
     <ClCompile Include="..\..\src\Simd\SimdBaseSynetActivation.cpp" />
+    <ClCompile Include="..\..\src\Simd\SimdBaseSynetAdd.cpp" />
     <ClCompile Include="..\..\src\Simd\SimdBaseSynetConversion.cpp" />
     <ClCompile Include="..\..\src\Simd\SimdBaseSynetConvolution32f.cpp" />
     <ClCompile Include="..\..\src\Simd\SimdBaseSynetConvolution32fBf16.cpp" />

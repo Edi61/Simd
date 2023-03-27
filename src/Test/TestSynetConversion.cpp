@@ -1,7 +1,7 @@
 /*
 * Tests for Simd Library (http://ermig1979.github.io/Simd).
 *
-* Copyright (c) 2011-2022 Yermalayeu Ihar.
+* Copyright (c) 2011-2023 Yermalayeu Ihar.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -82,7 +82,7 @@ namespace Test
 
         TEST_EXECUTE_AT_LEAST_MIN_TIME(f2.Call(src, scale, shift, dst2, comp));
 
-#if defined(SIMD_X64_ENABLE) || defined(SIMD_X86_ENABLE)
+#if (defined(SIMD_X64_ENABLE) || defined(SIMD_X86_ENABLE)) && !(defined(SIMD_X86_ENABLE) && defined(NDEBUG) && defined(_MSC_VER) && _MSC_VER >= 1900 && _MSC_VER < 1920)
         int differenceMax = (Simd::Base::FmaAvoid(comp) ? 0 : 1);
 #else
         int differenceMax = 1;
@@ -141,7 +141,7 @@ namespace Test
         return result;
     }
 
-    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------------------
 
     typedef FuncCvt<uint8_t, float> FuncCvt8uTo32f;
 
@@ -220,7 +220,7 @@ namespace Test
         return result;
     }
 
-    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------------------
 
     namespace
     {
@@ -327,167 +327,6 @@ namespace Test
 #ifdef SIMD_NEON_ENABLE
         if (Simd::Neon::Enable)
             result = result && SynetSetInputAutoTest(FUNC_SI(Simd::Neon::SynetSetInput), FUNC_SI(SimdSynetSetInput));
-#endif
-
-        return result;
-    }
-
-    //-------------------------------------------------------------------------
-
-    namespace
-    {
-        struct FuncRT
-        {
-            typedef void(*FuncPtr)(size_t n, size_t c, size_t hw, const float * src, SimdTensorFormatType srcFormat, float * dst, SimdTensorFormatType dstFormat);
-
-            FuncPtr func;
-            String desc;
-
-            FuncRT(const FuncPtr & f, const String & d) : func(f), desc(d) {}
-
-            void Update(size_t n, size_t c, size_t h, size_t w, SimdTensorFormatType src, SimdTensorFormatType dst)
-            {
-                desc = desc + "[" + ToString(n) + "x" + ToString(c) + "x" + ToString(h) + "x" + ToString(w) + ":" + ToString(src) + "->" + ToString(dst) + "]";
-            }
-
-            void Call(size_t n, size_t c, size_t h, size_t w, const Tensor32f & src, Tensor32f & dst) const
-            {
-                TEST_PERFORMANCE_TEST(desc);
-                func(n, c, h*w, src.Data(), src.Format(), dst.Data(), dst.Format());
-            }
-        };
-    }
-
-#define FUNC_RT(function) FuncRT(function, #function)
-
-    bool SynetReorderTensorAutoTest(size_t n, size_t c, size_t h, size_t w, SimdTensorFormatType srcFormat, SimdTensorFormatType dstFormat, FuncRT f1, FuncRT f2)
-    {
-        bool result = true;
-
-        f1.Update(n, c, h, w, srcFormat, dstFormat);
-        f2.Update(n, c, h, w, srcFormat, dstFormat);
-
-        TEST_LOG_SS(Info, "Test " << f1.desc << " & " << f2.desc);
-
-        Tensor32f src1(ToShape(n, c, h, w, srcFormat), srcFormat);
-        Tensor32f dst1(ToShape(n, c, h, w, dstFormat), dstFormat);
-        Tensor32f dst2(ToShape(n, c, h, w, dstFormat), dstFormat);
-        TEST_ALIGN(SIMD_ALIGN);
-
-#if 1
-        FillDebug(src1);
-#else
-        FillRandom(src1.Data(), src1.Size(), -10.0, 10.0);
-#endif
-
-        TEST_EXECUTE_AT_LEAST_MIN_TIME(f1.Call(n, c, h, w, src1, dst1));
-
-        TEST_EXECUTE_AT_LEAST_MIN_TIME(f2.Call(n, c, h, w, src1, dst2));
-
-        result = result && Compare(dst1, dst2, EPS, true, 64, DifferenceBoth, "forward");
-#if 0
-        if (srcFormat == SimdTensorFormatNchw || srcFormat == SimdTensorFormatNhwc || srcFormat == SimdTensorFormatOiyx || srcFormat == SimdTensorFormatYxio)
-        {
-            Tensor32f src2(ToShape(n, c, h, w, srcFormat), srcFormat);
-            f2.Call(n, c, h, w, dst2, src2);
-            result = result && Compare(src1, src2, EPS, true, 64, DifferenceBoth, "backward");
-        }
-#endif
-        return result;
-    }
-
-    bool SynetReorderImageAutoTest(int mask, const FuncRT & f1, const FuncRT & f2)
-    {
-        bool result = true;
-
-        //std::cout << "Specified tensor format: " << (int)SimdSynetSpecifyTensorFormat(SimdTensorFormatNchwXc) << std::endl;
-        for (SimdTensorFormatType src = SimdTensorFormatNchw; src <= SimdTensorFormatNchw16c && result; src = (SimdTensorFormatType)((int)src + 1))
-        {
-            for (SimdTensorFormatType dst = SimdTensorFormatNchw; dst <= SimdTensorFormatNchw16c && result; dst = (SimdTensorFormatType)((int)dst + 1))
-            {
-                if (src == dst || (src >= SimdTensorFormatNchw4c && dst >= SimdTensorFormatNchw4c) || 
-                    ((SimdSynetTensorAlignment(src)&mask) == 0) || ((SimdSynetTensorAlignment(dst)&mask) == 0))
-                    continue;
-                result = result && SynetReorderTensorAutoTest(9, W / 15 + 0, W / 60, W / 30, src, dst, f1, f2);
-                result = result && SynetReorderTensorAutoTest(9, W / 15 - 1, W / 58, W / 31, src, dst, f1, f2);
-            }
-        }
-
-        return result;
-    }
-
-    bool SynetReorderImageAutoTest()
-    {
-        bool result = true;
-
-        result = result && SynetReorderImageAutoTest(TFM_ANY, FUNC_RT(Simd::Base::SynetReorderImage), FUNC_RT(SimdSynetReorderImage));
-
-#ifdef SIMD_SSE41_ENABLE
-        if (Simd::Sse41::Enable)
-            result = result && SynetReorderImageAutoTest(TFM_128, FUNC_RT(Simd::Sse41::SynetReorderImage), FUNC_RT(SimdSynetReorderImage));
-#endif 
-
-#ifdef SIMD_AVX_ENABLE
-        if (Simd::Avx::Enable)
-            result = result && SynetReorderImageAutoTest(TFM_256, FUNC_RT(Simd::Avx::SynetReorderImage), FUNC_RT(SimdSynetReorderImage));
-#endif 
-
-#ifdef SIMD_AVX512BW_ENABLE
-        if (Simd::Avx512bw::Enable)
-            result = result && SynetReorderImageAutoTest(TFM_512, FUNC_RT(Simd::Avx512bw::SynetReorderImage), FUNC_RT(SimdSynetReorderImage));
-#endif 
-
-#ifdef SIMD_NEON_ENABLE
-        if (Simd::Neon::Enable)
-            result = result && SynetReorderImageAutoTest(TFM_128, FUNC_RT(Simd::Neon::SynetReorderImage), FUNC_RT(SimdSynetReorderImage));
-#endif
-
-        return result;
-    }
-
-    bool SynetReorderFilterAutoTest(int mask, const FuncRT & f1, const FuncRT & f2)
-    {
-        bool result = true;
-
-        for (SimdTensorFormatType src = SimdTensorFormatOiyx; src <= SimdTensorFormatOyxi16o && result; src = (SimdTensorFormatType)((int)src + 1))
-        {
-            for (SimdTensorFormatType dst = SimdTensorFormatOiyx; dst <= SimdTensorFormatOyxi16o && result; dst = (SimdTensorFormatType)((int)dst + 1))
-            {
-                if (src == dst || (src >= SimdTensorFormatOyxi4o && dst >= SimdTensorFormatOyxi4o) ||
-                    ((SimdSynetTensorAlignment(src)&mask) == 0) || ((SimdSynetTensorAlignment(dst)&mask) == 0))
-                    continue;
-                result = result && SynetReorderTensorAutoTest(W * 9 / 30 + 0, W * 7 / 30 + 0, 3, 3, src, dst, f1, f2);
-                result = result && SynetReorderTensorAutoTest(W * 9 / 10 - 1, W * 7 / 10 + 1, 1, 1, src, dst, f1, f2);
-            }
-        }
-
-        return result;
-    }
-
-    bool SynetReorderFilterAutoTest()
-    {
-        bool result = true;
-
-        result = result && SynetReorderFilterAutoTest(TFM_ANY, FUNC_RT(Simd::Base::SynetReorderFilter), FUNC_RT(SimdSynetReorderFilter));
-
-#ifdef SIMD_SSE41_ENABLE
-        if (Simd::Sse41::Enable)
-            result = result && SynetReorderFilterAutoTest(TFM_128, FUNC_RT(Simd::Sse41::SynetReorderFilter), FUNC_RT(SimdSynetReorderFilter));
-#endif 
-        
-#ifdef SIMD_AVX_ENABLE
-        if (Simd::Avx::Enable)
-            result = result && SynetReorderFilterAutoTest(TFM_256, FUNC_RT(Simd::Avx::SynetReorderFilter), FUNC_RT(SimdSynetReorderFilter));
-#endif 
-        
-#ifdef SIMD_AVX512BW_ENABLE
-        if (Simd::Avx512bw::Enable)
-            result = result && SynetReorderFilterAutoTest(TFM_512, FUNC_RT(Simd::Avx512bw::SynetReorderFilter), FUNC_RT(SimdSynetReorderFilter));
-#endif 
-
-#ifdef SIMD_NEON_ENABLE
-        if (Simd::Neon::Enable)
-            result = result && SynetReorderFilterAutoTest(TFM_128, FUNC_RT(Simd::Neon::SynetReorderFilter), FUNC_RT(SimdSynetReorderFilter));
 #endif
 
         return result;

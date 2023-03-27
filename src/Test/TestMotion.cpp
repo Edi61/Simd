@@ -1,7 +1,7 @@
 /*
 * Tests for Simd Library (http://ermig1979.github.io/Simd).
 *
-* Copyright (c) 2011-2022 Yermalayeu Ihar.
+* Copyright (c) 2011-2023 Yermalayeu Ihar.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@
 */
 #include "Test/TestCompare.h"
 #include "Test/TestPerformance.h"
+#include "Test/TestVideo.h"
 
 //-----------------------------------------------------------------------------
 
@@ -30,7 +31,6 @@
 #define SIMD_CHECK_PERFORMANCE() TEST_PERFORMANCE_TEST_(__FUNCTION__)
 #endif
 
-#include "Test/TestVideo.h"
 #include "Simd/SimdMotion.hpp"
 #include "Simd/SimdDrawing.hpp"
 #include "Simd/SimdPixel.hpp"

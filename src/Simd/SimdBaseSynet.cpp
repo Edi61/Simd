@@ -1,7 +1,7 @@
 /*
 * Simd Library (http://ermig1979.github.io/Simd).
 *
-* Copyright (c) 2011-2021 Yermalayeu Ihar.
+* Copyright (c) 2011-2023 Yermalayeu Ihar.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -32,164 +32,6 @@ namespace Simd
 #if defined(SIMD_SYNET_ENABLE)
     namespace Base
     {
-        SimdTensorFormatType SynetSpecifyTensorFormat(SimdTensorFormatType format)
-        {
-            const size_t alignment = Alignment();
-            if (format == SimdTensorFormatNchwXc)
-            {
-                switch (alignment)
-                {
-                case 16: return SimdTensorFormatNchw4c;
-                case 32: return SimdTensorFormatNchw8c;
-                case 64: return SimdTensorFormatNchw16c;
-                }
-            }
-            if (format == SimdTensorFormatOyxiXo)
-            {
-                switch (alignment)
-                {
-                case 16: return SimdTensorFormatOyxi4o;
-                case 32: return SimdTensorFormatOyxi8o;
-                case 64: return SimdTensorFormatOyxi16o;
-                }
-            }
-            return SimdTensorFormatUnknown;
-        }
-
-        size_t SynetTensorAlignment(SimdTensorFormatType format)
-        {
-            switch (format)
-            {
-            case SimdTensorFormatNchw: return 1;
-            case SimdTensorFormatNhwc: return 1;
-            case SimdTensorFormatNchw4c: return 4;
-            case SimdTensorFormatNchw8c: return 8;
-            case SimdTensorFormatNchw16c: return 16;
-            case SimdTensorFormatOiyx: return 1;
-            case SimdTensorFormatYxio: return 1;
-            case SimdTensorFormatOyxi4o: return 4;
-            case SimdTensorFormatOyxi8o: return 8;
-            case SimdTensorFormatOyxi16o: return 16;
-            default: 
-                assert(0); 
-                return 0;
-            }
-        }
-
-        void SynetAddBiasNchw(const float * bias, size_t channels, size_t spatial, float * dst)
-        {
-            size_t aligned = Simd::AlignLo(spatial, 4);
-            for (size_t c = 0; c < channels; ++c)
-            {
-                float value = bias[c];
-                size_t s = 0;
-                for (; s < aligned; s += 4)
-                {
-                    dst[s + 0] += value;
-                    dst[s + 1] += value;
-                    dst[s + 2] += value;
-                    dst[s + 3] += value;
-                }
-                for (; s < spatial; ++s)
-                    dst[s] += value;
-                dst += spatial;
-            }
-        }
-
-        void SynetAddBiasNhwc(const float * bias, size_t channels, size_t spatial, float * dst)
-        {
-            size_t aligned = Simd::AlignLo(channels, 4);
-            for (size_t s = 0; s < spatial; ++s)
-            {
-                size_t c = 0;
-                for (; c < aligned; c += 4)
-                {
-                    dst[c + 0] += bias[c + 0];
-                    dst[c + 1] += bias[c + 1];
-                    dst[c + 2] += bias[c + 2];
-                    dst[c + 3] += bias[c + 3];
-                }
-                for (; c < channels; ++c)
-                    dst[c] += bias[c];
-                dst += channels;
-            }
-        }
-
-        template<int N> void SynetAddBiasNchwXc(const float * bias, size_t channels, size_t spatial, float * dst)
-        {
-            for (size_t c = 0; c < channels; c += N)
-            {
-                for (size_t s = 0; s < spatial; ++s)
-                {
-                    for (size_t i = 0; i < N; ++i)
-                        dst[i] += bias[i];
-                    dst += N;
-                }
-                bias += N;
-            }
-        }
-
-        void SynetAddBias(const float * bias, size_t channels, size_t spatial, float * dst, SimdTensorFormatType format)
-        {
-            if (Base::NchwCompatible(channels, spatial, format))
-                SynetAddBiasNchw(bias, channels, spatial, dst);
-            else if (Base::NhwcCompatible(channels, spatial, format))
-                SynetAddBiasNhwc(bias, channels, spatial, dst);
-            else if(format == SimdTensorFormatNchw4c)
-                SynetAddBiasNchwXc<4>(bias, channels, spatial, dst);
-            else if (format == SimdTensorFormatNchw8c)
-                SynetAddBiasNchwXc<8>(bias, channels, spatial, dst);
-            else if (format == SimdTensorFormatNchw16c)
-                SynetAddBiasNchwXc<16>(bias, channels, spatial, dst);
-            else
-                assert(0);
-        }
-
-        //---------------------------------------------------------------------
-
-        void SynetAdd8i(const uint8_t* aData, const float* aScale, const float* aShift, const uint8_t* bData, const float* bScale, const float* bShift,
-            uint8_t* cData, const float* cScale, const float* cShift, size_t batch, size_t channels, size_t spatial, SimdTensorFormatType format, SimdSynetCompatibilityType compatibility)
-        {
-            int lower, upper;
-            if (Base::Narrowed(compatibility))
-                lower = Base::U8_NARROWED_MIN, upper = Base::U8_NARROWED_MAX;
-            else
-                lower = Base::U8_PRECISE_MIN, upper = Base::U8_PRECISE_MAX;
-            for (size_t b = 0; b < batch; ++b)
-            {
-                if (format == SimdTensorFormatNchw)
-                {
-                    for (size_t c = 0; c < channels; ++c)
-                    {
-                        for (size_t s = 0; s < spatial; ++s)
-                        {
-                            float a = float(aData[s]) * aScale[c] + aShift[c];
-                            float b = float(bData[s]) * bScale[c] + bShift[c];
-                            cData[s] = Base::SynetConvert32fTo8u(a + b, cScale[c], cShift[c], lower, upper);
-                        }
-                        aData += spatial, bData += spatial, cData += spatial;
-                    }
-                }
-                else if (format == SimdTensorFormatNhwc)
-                {
-                    for (size_t s = 0; s < spatial; ++s)
-                    {
-                        for (size_t c = 0; c < channels; ++c)
-                        {
-                            float a = float(aData[c]) * aScale[c] + aShift[c];
-                            float b = float(bData[c]) * bScale[c] + bShift[c];
-                            cData[c] = Base::SynetConvert32fTo8u(a + b, cScale[c], cShift[c], lower, upper);
-                        }
-                        aData += channels, bData += channels, cData += channels;
-                    }
-                }
-                else
-                    assert(0);
-            }
-        }
-
-        //---------------------------------------------------------------------
-
         template <SimdSynetEltwiseOperationType type> void SynetEltwiseLayerForward(float const * const * src, size_t count, size_t size, float * dst)
         {
             size_t aligned = Simd::AlignLo(size, 4);
@@ -273,7 +115,7 @@ namespace Simd
             }
         }
 
-        //---------------------------------------------------------------------
+        //-------------------------------------------------------------------------------------------------
 
         void SynetInnerProduct8i(size_t M, size_t N, size_t K, const uint8_t* src, const int8_t* weight, int32_t* dst, SimdSynetCompatibilityType compatibility)
         {
@@ -296,7 +138,7 @@ namespace Simd
             }
         }
 
-        //---------------------------------------------------------------------
+        //-------------------------------------------------------------------------------------------------
 
         void SynetLrnLayerCrossChannelsNchw(const float * src, size_t half, size_t channels, size_t spatial, const float * k, float * dst)
         {
@@ -354,28 +196,17 @@ namespace Simd
             }
         }
 
-        template<int N> void SynetLrnLayerCrossChannelsNchwXc(const float * src, size_t half, size_t channels, size_t spatial, const float * k, float * dst)
-        {
-            assert(0);
-        }
-
         void SynetLrnLayerCrossChannels(const float * src, size_t half, size_t channels, size_t spatial, const float * k, float * dst, SimdTensorFormatType format)
         {
             if (format == SimdTensorFormatNchw)
                 SynetLrnLayerCrossChannelsNchw(src, half, channels, spatial, k, dst);
             else if (format == SimdTensorFormatNhwc)
                 SynetLrnLayerCrossChannelsNhwc(src, half, channels, spatial, k, dst);
-            else if (format == SimdTensorFormatNchw4c)
-                SynetLrnLayerCrossChannelsNchwXc<4>(src, half, channels, spatial, k, dst);
-            else if (format == SimdTensorFormatNchw8c)
-                SynetLrnLayerCrossChannelsNchwXc<8>(src, half, channels, spatial, k, dst);
-            else if (format == SimdTensorFormatNchw16c)
-                SynetLrnLayerCrossChannelsNchwXc<16>(src, half, channels, spatial, k, dst);
             else
                 assert(0);
         }
 
-        //---------------------------------------------------------------------
+        //-------------------------------------------------------------------------------------------------
 
         void SynetShuffleLayerForward(const float* src0, const float* src1, size_t channels0, size_t channels1, size_t spatial, float* dst0, float* dst1, SimdTensorFormatType format, int type)
         {
@@ -478,7 +309,7 @@ namespace Simd
 
         }
 
-        //---------------------------------------------------------------------
+        //-------------------------------------------------------------------------------------------------
 
         void SynetSoftmaxLayerForward(const float * src, size_t outer, size_t count, size_t inner, float * dst)
         {
@@ -541,7 +372,7 @@ namespace Simd
             }
         }
 
-        //---------------------------------------------------------------------
+        //-------------------------------------------------------------------------------------------------
 
         template<SimdSynetUnaryOperation32fType type> void SynetUnaryOperation32fLayerForward(const float* src, size_t size, float* dst)
         {
